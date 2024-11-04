@@ -4,11 +4,9 @@ from .models import User, House
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'full_name', 'user_type', 'created_at']
+        fields = '__all__'
 
 class HouseSerializer(serializers.ModelSerializer):
-    owner = UserSerializer(read_only=True)
-
     class Meta:
         model = House
         fields = ['id', 'owner', 'status', 'street', 'city', 'zipcode', 'price',

@@ -48,15 +48,18 @@ class HouseListView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
 
 class HouseDetailView(APIView):
+    permission_classes = [AllowAny]
     def get(self, request, house_id):
-        house = get_object_or_404(House, pk=house_id)
+        house = get_object_or_404(House, id=house_id)
         serializer = HouseSerializer(house)
         return Response(serializer.data)
 
     def put(self, request, house_id):
-        house = get_object_or_404(House, pk=house_id)
+        house = get_object_or_404(House, id=house_id)
         serializer = HouseSerializer(house, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -64,7 +67,8 @@ class HouseDetailView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, house_id):
-        house = get_object_or_404(House, pk=house_id)
+        print('hit')
+        house = get_object_or_404(House, id=house_id)
         house.delete()
         return Response({"message": "House deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 

@@ -1,5 +1,7 @@
 from django.db import models
 
+#schema
+#User(PK: user_id, user_name, password, user_type, email, created_at)
 class User(models.Model):
     user_id = models.AutoField(primary_key=True)
     user_name = models.CharField(max_length=150, unique=True)
@@ -11,7 +13,8 @@ class User(models.Model):
     def __str__(self):
         return self.user_name
 
-
+#House(PK: id, FK: owner, status, street,city, zipcode, price, number_of_bedrooms, 
+#number_of_bathrooms, squarefootage, year_built, updated_at)
 class House(models.Model):
     id = models.AutoField(primary_key=True)
     owner = models.CharField(max_length=150) #models.ForeignKey(User, on_delete=models.CASCADE)

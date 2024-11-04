@@ -8,5 +8,5 @@ urlpatterns = [
     path('login/', LoginUserView.as_view(), name='login_user'),
     path('user/<int:user_id>/', UserDetailView.as_view(), name='user_detail'),
     path('houses/', HouseListView.as_view(), name='house-list'),
-    path('house/<int:house_id>/', HouseDetailView.as_view(), name='house-detail'),
+    path('houses/<int:house_id>/', HouseDetailView.as_view(), name='house-detail'),
 ]

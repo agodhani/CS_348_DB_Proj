@@ -6,6 +6,8 @@ import RegisterUser from './components/RegisterUser';
 import LoginUser from './components/LoginUser';
 import HouseList from './components/HouseList';
 import AddHouse from './components/AddHouse';
+import EditHouse from './components/EditHouse';
+import DeleteHouse from './components/DeleteHouse';
 import './App.css'; // Optional: Import global CSS
 
 function App() {
@@ -31,6 +33,12 @@ function App() {
                         <li>
                             <Link to="/add-house">Add House</Link>
                         </li>
+                        <li>
+                            <Link to="/edit-house">Edit House</Link>
+                        </li>
+                        <li>
+                            <Link to="/delete-house">Delete House</Link>
+                        </li>
                     </ul>
                 </nav>
                 <Routes>
@@ -38,6 +46,8 @@ function App() {
                     <Route path="/login" element={<LoginUser onLoginSuccess={handleLoginSuccess} />} />
                     <Route path="/houses" element={<HouseList />} />
                     <Route path="/add-house" element={<AddHouse />} />
+                    <Route path="/edit-house" element={<EditHouse />} />
+                    <Route path="/delete-house" element={<DeleteHouse />} />
                     {/* Add a default route or 404 page as needed */}
                 </Routes>
             </div>
