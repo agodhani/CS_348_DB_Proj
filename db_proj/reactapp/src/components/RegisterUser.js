@@ -1,3 +1,4 @@
+// src/components/RegisterUser.js
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -6,7 +7,6 @@ const RegisterUser = () => {
     const [formData, setFormData] = useState({
         user_name: '',
         password: '',
-        user_type: '',
         email: '',
     });
 
@@ -22,12 +22,12 @@ const RegisterUser = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            // Update the endpoint to match your urls.py
             const response = await axios.post('http://127.0.0.1:8000/accounts/register/', formData);
             alert('User registered successfully!');
             setFormData({
                 user_name: '',
                 password: '',
-                user_type: '',
                 email: '',
             });
             navigate('/login'); // Redirect to login page after successful registration
@@ -57,16 +57,6 @@ const RegisterUser = () => {
                         type="password"
                         name="password"
                         value={formData.password}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>User Type: </label>
-                    <input
-                        type="text"
-                        name="user_type"
-                        value={formData.user_type}
                         onChange={handleChange}
                         required
                     />

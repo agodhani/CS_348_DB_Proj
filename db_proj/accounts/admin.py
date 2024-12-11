@@ -1,9 +1,9 @@
 from django.contrib import admin
-from .models import User, House
+from .models import FakeUser, House
 
-@admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    list_display = ('user_id', 'user_name', 'email', 'user_type', 'created_at')
+@admin.register(FakeUser)
+class FakeUserAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user_name', 'email', 'created_at', 'current_session')
 
 @admin.register(House)
 class HouseAdmin(admin.ModelAdmin):

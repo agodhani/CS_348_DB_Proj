@@ -1,9 +1,7 @@
-// src/components/EditHouse.js
 import React, { useState, useEffect } from 'react';
 import './EditHouse.css'; // Optional CSS file for styling
 
 function EditHouse() {
-    // State variables for form fields
     const [houses, setHouses] = useState([]);
     const [selectedHouseId, setSelectedHouseId] = useState('');
     const [houseData, setHouseData] = useState({
@@ -19,9 +17,18 @@ function EditHouse() {
         year_built: '',
     });
 
-    // State variables for handling feedback
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
+    const [ownerId, setOwnerId] = useState(null);
+
+    useEffect(() => {
+        const userId = localStorage.getItem('user_id');
+        if (userId !=null) {
+            setOwnerId(parseInt(userId, 10));
+        } else {
+            console.warn('No user_id found in localStorage. Make sure the user is logged in.');
+        }
+    }, []);
 
     // Fetch the list of houses on component mount
     useEffect(() => {
@@ -52,17 +59,19 @@ function EditHouse() {
                     }
                     const data = await response.json();
                     setHouseData({
-                        owner: data.owner || '',
+                        // Override the owner field with the current user_id if available
+                        owner: ownerId ? ownerId.toString() : data.owner.toString(),
                         status: data.status || '',
                         street: data.street || '',
                         city: data.city || '',
                         zipcode: data.zipcode || '',
-                        price: data.price || '',
-                        number_of_bedrooms: data.number_of_bedrooms || '',
-                        number_of_bathrooms: data.number_of_bathrooms || '',
-                        square_footage: data.square_footage || '',
-                        year_built: data.year_built || '',
+                        price: data.price ? data.price.toString() : '',
+                        number_of_bedrooms: data.number_of_bedrooms ? data.number_of_bedrooms.toString() : '',
+                        number_of_bathrooms: data.number_of_bathrooms ? data.number_of_bathrooms.toString() : '',
+                        square_footage: data.square_footage ? data.square_footage.toString() : '',
+                        year_built: data.year_built ? data.year_built.toString() : '',
                     });
+                    console.log(houseData.owner)
                     setError(null);
                 } catch (err) {
                     console.error('Error fetching house data:', err);
@@ -71,24 +80,44 @@ function EditHouse() {
             };
             fetchHouseData();
         }
-    }, [selectedHouseId]);
+    }, [selectedHouseId, ownerId]);
 
-    // Handler for form submission
     const handleSubmit = async (e) => {
-        e.preventDefault(); // Prevent default form submission behavior
+        e.preventDefault();
+        const userId = localStorage.getItem('user_id');
+        if (userId == null) {
+            setError('No owner ID found. Please log in first.');
+            setSuccess(false);
+            return;
+        }
+        
+        if (userId != ownerId) {
+            setError('You are not owner of house');
+            setSuccess(false);
+            return;
+        }
+        // Ensure owner is set to the current user_id (integer)
+        const updatedHouseData = {
+            ...houseData,
+            owner: ownerId,
+            price: parseFloat(houseData.price),
+            number_of_bedrooms: parseInt(houseData.number_of_bedrooms),
+            number_of_bathrooms: parseFloat(houseData.number_of_bathrooms),
+            square_footage: parseInt(houseData.square_footage),
+            year_built: parseInt(houseData.year_built),
+        };
 
-        // Optional: Validate form data before sending
         if (
-            !houseData.owner ||
-            !houseData.status ||
-            !houseData.street ||
-            !houseData.city ||
-            !houseData.zipcode ||
-            isNaN(parseFloat(houseData.price)) ||
-            isNaN(parseInt(houseData.number_of_bedrooms)) ||
-            isNaN(parseFloat(houseData.number_of_bathrooms)) ||
-            isNaN(parseInt(houseData.square_footage)) ||
-            isNaN(parseInt(houseData.year_built))
+            !updatedHouseData.owner ||
+            !updatedHouseData.status ||
+            !updatedHouseData.street ||
+            !updatedHouseData.city ||
+            !updatedHouseData.zipcode ||
+            isNaN(updatedHouseData.price) ||
+            isNaN(updatedHouseData.number_of_bedrooms) ||
+            isNaN(updatedHouseData.number_of_bathrooms) ||
+            isNaN(updatedHouseData.square_footage) ||
+            isNaN(updatedHouseData.year_built)
         ) {
             setError('Please fill in all required fields correctly.');
             setSuccess(false);
@@ -96,13 +125,12 @@ function EditHouse() {
         }
 
         try {
-            // Send POST request to the backend API to update the house
             const response = await fetch(`http://127.0.0.1:8000/accounts/houses/${selectedHouseId}/`, {
-                method: 'PUT', // Use PUT for updates
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(houseData),
+                body: JSON.stringify(updatedHouseData),
             });
 
             if (!response.ok) {
@@ -112,24 +140,17 @@ function EditHouse() {
                 throw new Error(errorMessage || 'Failed to update house.');
             }
 
-            // If successful, parse the response data
-            const data = await response.json();
+            await response.json();
 
-            // Update state to reflect success
             setSuccess(true);
             setError(null);
-
-            // Optionally, refresh the house list or perform other actions
-
         } catch (err) {
-            // Handle errors by updating the error state
             console.error('Error updating house:', err);
             setError(err.message);
             setSuccess(false);
         }
     };
 
-    // Handler for input changes
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setHouseData((prevData) => ({
@@ -142,13 +163,9 @@ function EditHouse() {
         <div className="edit-house-container">
             <h2>Edit a House</h2>
 
-            {/* Display error message */}
             {error && <div className="error-message">Error: {error}</div>}
-
-            {/* Display success message */}
             {success && <div className="success-message">House updated successfully!</div>}
 
-            {/* Dropdown to select house */}
             <div className="form-group">
                 <label htmlFor="selectedHouseId">Select a house to edit:</label>
                 <select
@@ -165,23 +182,9 @@ function EditHouse() {
                 </select>
             </div>
 
-            {/* Display the form only if a house is selected */}
             {selectedHouseId && (
                 <form onSubmit={handleSubmit} className="edit-house-form">
-                    <div className="form-group">
-                        <label htmlFor="owner">Owner<span className="required">*</span>:</label>
-                        <input
-                            type="text"
-                            id="owner"
-                            name="owner"
-                            value={houseData.owner}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="Enter owner name"
-                        />
-                    </div>
-
-                    {/* Repeat similar input fields for other house attributes */}
+                    {/* Owner is no longer manually editable to prevent mismatch */}
                     <div className="form-group">
                         <label htmlFor="status">Status<span className="required">*</span>:</label>
                         <input
@@ -195,7 +198,6 @@ function EditHouse() {
                         />
                     </div>
 
-                    {/* Continue for street, city, zipcode, price, etc. */}
                     <div className="form-group">
                         <label htmlFor="street">Street<span className="required">*</span>:</label>
                         <input

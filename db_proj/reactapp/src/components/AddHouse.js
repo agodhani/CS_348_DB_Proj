@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import './AddHouse.css';
 
 function AddHouse() {
-    // State variables for form fields
+    // Remove owner from state since we will not ask the user to enter it:
     const [owner, setOwner] = useState('');
+
     const [status, setStatus] = useState('');
     const [street, setStreet] = useState('');
     const [city, setCity] = useState('');
@@ -14,31 +15,38 @@ function AddHouse() {
     const [squareFootage, setSquareFootage] = useState('');
     const [yearBuilt, setYearBuilt] = useState('');
 
-    // State variables for handling feedback
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
 
-    // Handler for form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Construct the house data object
+        // Get user_id from localStorage
+        const userId = localStorage.getItem('user_id');
+        if (userId == null) {
+            setError('No user is logged in. Please log in first.');
+            setSuccess(false);
+            return;
+        }
+        setOwner(userId)
+
+        // Construct the house data object, now including the owner as userId (int)
         const houseData = {
-            owner: owner.trim(),
+            owner: parseInt(userId, 10),
             status: status.trim(),
             street: street.trim(),
             city: city.trim(),
             zipcode: zipcode.trim(),
             price: parseFloat(price),
-            number_of_bedrooms: parseInt(numberOfBedrooms),
+            number_of_bedrooms: parseInt(numberOfBedrooms, 10),
             number_of_bathrooms: parseFloat(numberOfBathrooms),
-            square_footage: parseInt(squareFootage),
-            year_built: parseInt(yearBuilt),
+            square_footage: parseInt(squareFootage, 10),
+            year_built: parseInt(yearBuilt, 10),
         };
 
         // Validate form data before sending
         if (
-            !houseData.owner ||
+            isNaN(houseData.owner) ||
             !houseData.status ||
             !houseData.street ||
             !houseData.city ||
@@ -55,7 +63,6 @@ function AddHouse() {
         }
 
         try {
-            // Send POST request to the backend API
             const response = await fetch('http://127.0.0.1:8000/accounts/houses/', {
                 method: 'POST',
                 headers: {
@@ -65,22 +72,18 @@ function AddHouse() {
             });
 
             if (!response.ok) {
-                // Extract error message from response
                 const errorData = await response.json();
                 console.error('Error response:', errorData);
                 const errorMessage = errorData.detail || JSON.stringify(errorData);
                 throw new Error(errorMessage || 'Failed to add house.');
             }
 
-            // If successful, parse the response data
             const data = await response.json();
-
-            // Update state to reflect success
             setSuccess(true);
             setError(null);
 
             // Clear form fields
-            setOwner('');
+            // We no longer had an owner field to clear
             setStatus('');
             setStreet('');
             setCity('');
@@ -92,7 +95,6 @@ function AddHouse() {
             setYearBuilt('');
 
         } catch (err) {
-            // Handle errors by updating the error state
             console.error('Error adding house:', err);
             setError(err.message);
             setSuccess(false);
@@ -102,26 +104,12 @@ function AddHouse() {
     return (
         <div className="add-house-container">
             <h2>Add a New House</h2>
-
-            {/* Display success message */}
             {success && <div className="success-message">House added successfully!</div>}
-
-            {/* Display error message */}
             {error && <div className="error-message">Error: {error}</div>}
 
             <form onSubmit={handleSubmit} className="add-house-form">
-                <div className="form-group">
-                    <label htmlFor="owner">Owner<span className="required">*</span>:</label>
-                    <input
-                        type="text"
-                        id="owner"
-                        value={owner}
-                        onChange={(e) => setOwner(e.target.value)}
-                        required
-                        placeholder="Enter owner name"
-                    />
-                </div>
-
+                {/* Remove owner input field since we set it automatically */}
+                
                 <div className="form-group">
                     <label htmlFor="status">Status<span className="required">*</span>:</label>
                     <input
@@ -134,6 +122,7 @@ function AddHouse() {
                     />
                 </div>
 
+                {/* The rest remain the same */}
                 <div className="form-group">
                     <label htmlFor="street">Street<span className="required">*</span>:</label>
                     <input

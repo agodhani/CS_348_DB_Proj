@@ -1,3 +1,4 @@
+// src/components/LoginUser.js
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -17,9 +18,16 @@ const LoginUser = ({ onLoginSuccess }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            // Update the endpoint to match your urls.py
             const response = await axios.post('http://127.0.0.1:8000/accounts/login/', formData, { withCredentials: true });
             alert('Login successful!');
-            onLoginSuccess(); // Call a callback function to indicate successful login
+
+            // Extract user_id from the response data
+            const { user_id } = response.data;
+            
+            // Pass user_id to onLoginSuccess if needed
+            onLoginSuccess(user_id);
+
         } catch (error) {
             console.error('Login error:', error.response ? error.response.data : error.message);
             alert('Invalid username or password. Please try again.');

@@ -54,6 +54,11 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
+CORS_ALLOW_CREDENTIALS = True
+
 
 ROOT_URLCONF = "db_proj.urls"
 
@@ -76,6 +81,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "db_proj.wsgi.application"
+AUTH_USER_MODEL = 'accounts.FakeUser'
 
 
 # Database

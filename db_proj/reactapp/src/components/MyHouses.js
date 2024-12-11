@@ -1,53 +1,54 @@
-// src/components/HouseList.js
 import React, { useEffect, useState } from 'react';
-import './HouseList.css';
 
-function HouseList() {
+function MyHouses() {
     const [houses, setHouses] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('http://127.0.0.1:8000/accounts/houses/')
-            .then(response => {
-                console.log(response)
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Fetched houses:', data);
-                setHouses(data);
-                setLoading(false);
-            })
-            .catch(error => {
-                console.error('Error fetching houses:', error);
-                setError(error);
-                setLoading(false);
-            });
+        // Assume user_id is stored in localStorage after login
+        const userId = localStorage.getItem('user_id');
+        if (userId == null) {
+            setError('Not logged in. Please log in first.');
+            setLoading(false);
+            return;
+        }
+
+        fetch(`http://127.0.0.1:8000/accounts/myhouses/`, {
+            headers: {
+              'Content-Type': 'application/json',
+              // If needed, include a token or user_id in headers:
+              // 'X-User-ID': userId
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch houses');
+            }
+            return response.json();
+        })
+        .then(data => {
+            setHouses(data);
+            setLoading(false);
+        })
+        .catch(err => {
+            console.error(err);
+            setError(err.message);
+            setLoading(false);
+        });
     }, []);
 
-    if (loading) {
-        return <div>Loading houses...</div>;
-    }
-
-    if (error) {
-        return <div>Error loading houses: {error.message}</div>;
-    }
-
-    if (houses.length === 0) {
-        return <p>No houses available.</p>;
-    }
+    if (loading) return <div>Loading your houses...</div>;
+    if (error) return <div>Error: {error}</div>;
+    if (houses.length === 0) return <p>You have no houses.</p>;
 
     return (
         <div>
-            <h2>House List</h2>
+            <h2>My Houses</h2>
             <table border="1" cellPadding="8" cellSpacing="0">
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Owner</th>
                         <th>Status</th>
                         <th>Street</th>
                         <th>City</th>
@@ -64,7 +65,6 @@ function HouseList() {
                     {houses.map(house => (
                         <tr key={house.id}>
                             <td>{house.id}</td>
-                            <td>{house.owner}</td>
                             <td>{house.status}</td>
                             <td>{house.street}</td>
                             <td>{house.city}</td>
@@ -83,4 +83,4 @@ function HouseList() {
     );
 }
 
-export default HouseList;
+export default MyHouses;
