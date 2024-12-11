@@ -30,7 +30,6 @@ class FakeUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.user_name
 
-
 class House(models.Model):
     # Make sure AUTH_USER_MODEL is set in settings.py to 'accounts.FakeUser'
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='houses')
@@ -45,5 +44,13 @@ class House(models.Model):
     year_built = models.IntegerField()
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f'{self.street}, {self.city}'
+    class Meta:
+        indexes = [
+            models.Index(fields=['city'], name='city_idx'),
+            models.Index(fields=['zipcode'], name='zipcode_idx'),
+            models.Index(fields=['price'], name='price_idx'),
+            models.Index(fields=['number_of_bedrooms'], name='bedrooms_idx'),
+            models.Index(fields=['number_of_bathrooms'], name='bathrooms_idx'),
+            models.Index(fields=['square_footage'], name='sqft_idx'),
+            models.Index(fields=['year_built'], name='year_idx'),
+        ]

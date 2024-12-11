@@ -15,11 +15,59 @@ from .serializers import FakeUserSerializer, HouseSerializer
 class HouseListView(APIView):
     permission_classes = [AllowAny]
 
-    def get(self,request):
-        houses = House.objects.all()
-        serializer = HouseSerializer(houses, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get(self, request):
+        from django.db import connection
 
+        filter_field = request.GET.get('filter_field', None)
+        filter_value = request.GET.get('filter_value', None)
+
+        # Base query selecting from house and joining to FakeUser for owner name (optional)
+        sql = """
+            SELECT h.id, f.user_name as owner, h.status, h.street, h.city, h.zipcode, 
+                   h.price, h.number_of_bedrooms, h.number_of_bathrooms, 
+                   h.square_footage, h.year_built, h.updated_at
+            FROM accounts_house h
+            JOIN accounts_fakeuser f ON h.owner_id = f.id
+        """
+
+        params = []
+        allowed_filters = {
+            'city': 'city',
+            'zipcode': 'zipcode',
+            'price': 'price',
+            'bedrooms': 'number_of_bedrooms',
+            'bathrooms': 'number_of_bathrooms',
+            'square_footage': 'square_footage',
+            'year_built': 'year_built'
+        }
+
+        if filter_field and filter_value and filter_field in allowed_filters:
+            column_name = allowed_filters[filter_field]
+            sql += f" WHERE {column_name} = %s"
+            # Convert filter_value to the correct type if numeric
+            numeric_fields = {'price', 'number_of_bedrooms', 'number_of_bathrooms', 'square_footage', 'year_built'}
+            if column_name in numeric_fields:
+                # For price, we assume decimal or float
+                if column_name == 'price':
+                    filter_value = float(filter_value)
+                else:
+                    filter_value = int(filter_value)
+            params.append(filter_value)
+
+        sql += " ORDER BY h.id"
+
+        with connection.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+
+        columns = [
+            'id','owner','status','street','city','zipcode','price',
+            'number_of_bedrooms','number_of_bathrooms',
+            'square_footage','year_built','updated_at'
+        ]
+        houses = [dict(zip(columns, row)) for row in rows]
+        return Response(houses, status=status.HTTP_200_OK)
+    
     def post(self, request):
         # If you want to ensure the owner is the current user, do so here:
         # request.data['owner'] = request.user.id  (if using token or session)

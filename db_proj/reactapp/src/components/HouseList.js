@@ -7,10 +7,37 @@ function HouseList() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        fetch('http://127.0.0.1:8000/accounts/houses/')
+    // State for filtering
+    const [filterField, setFilterField] = useState('');
+    const [filterValue, setFilterValue] = useState('');
+
+    // Allowed filters correspond to backend allowed_filters
+    const filterOptions = [
+        { label: 'City', value: 'city' },
+        { label: 'Zipcode', value: 'zipcode' },
+        { label: 'Price', value: 'price' },
+        { label: 'Bedrooms', value: 'bedrooms' },
+        { label: 'Bathrooms', value: 'bathrooms' },
+        { label: 'Square Footage', value: 'square_footage' },
+        { label: 'Year Built', value: 'year_built' }
+    ];
+
+    const fetchHouses = () => {
+        setLoading(true);
+        setError(null);
+
+        let url = 'http://127.0.0.1:8000/accounts/houses/';
+        const params = [];
+        if (filterField && filterValue) {
+            params.push(`filter_field=${encodeURIComponent(filterField)}`);
+            params.push(`filter_value=${encodeURIComponent(filterValue)}`);
+        }
+        if (params.length > 0) {
+            url += '?' + params.join('&');
+        }
+
+        fetch(url)
             .then(response => {
-                console.log(response)
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
@@ -26,7 +53,17 @@ function HouseList() {
                 setError(error);
                 setLoading(false);
             });
+    };
+
+    // Fetch houses initially without any filters
+    useEffect(() => {
+        fetchHouses();
     }, []);
+
+    const handleFilterApply = (e) => {
+        e.preventDefault();
+        fetchHouses();
+    };
 
     if (loading) {
         return <div>Loading houses...</div>;
@@ -37,12 +74,55 @@ function HouseList() {
     }
 
     if (houses.length === 0) {
-        return <p>No houses available.</p>;
+        return (
+            <div>
+                <h2>House List</h2>
+                <form onSubmit={handleFilterApply} className="filter-form">
+                    <label>Filter Field:</label>
+                    <select value={filterField} onChange={(e) => setFilterField(e.target.value)}>
+                        <option value="">--No Filter--</option>
+                        {filterOptions.map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                    </select>
+
+                    <label>Filter Value:</label>
+                    <input
+                        type="text"
+                        value={filterValue}
+                        onChange={(e) => setFilterValue(e.target.value)}
+                    />
+
+                    <button type="submit">Apply Filter</button>
+                </form>
+                <p>No houses available.</p>
+            </div>
+        );
     }
 
     return (
         <div>
             <h2>House List</h2>
+
+            <form onSubmit={handleFilterApply} className="filter-form">
+                <label>Filter Field:</label>
+                <select value={filterField} onChange={(e) => setFilterField(e.target.value)}>
+                    <option value="">--No Filter--</option>
+                    {filterOptions.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                </select>
+
+                <label>Filter Value:</label>
+                <input
+                    type="text"
+                    value={filterValue}
+                    onChange={(e) => setFilterValue(e.target.value)}
+                />
+
+                <button type="submit">Apply Filter</button>
+            </form>
+
             <table border="1" cellPadding="8" cellSpacing="0">
                 <thead>
                     <tr>
